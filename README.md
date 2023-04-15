@@ -1,5 +1,5 @@
 
-<h1>Projeto Spring Data JPA</h1>
+<h1>Projeto Spring Data JPA: Film catalog project</h1>
 <p> Sejam bem-vindos ao projeto de LAB <strong>Spring Data JPA</strong> oferecido pelo IFBA - Instituto Federal da Bahia, na disciplina de programação WEB.<br>
 
 <h2>🎯 Objetivo do Projeto</h2>
