@@ -35,30 +35,27 @@ public class MovieController {
 
     @GetMapping
     public ResponseEntity<List<MovieResponseDTO>> find(@RequestParam(required = false) String name){
-
-        var list = service.find(name);
-        
-        if(list.isEmpty()){
-            return new ResponseEntity<List<MovieResponseDTO>>(HttpStatus.NOT_FOUND);
-        }
-        return new ResponseEntity<List<MovieResponseDTO>>(list, HttpStatus.OK);
+        var data = service.find(name).get();
+        var isExists = data.isEmpty();
+        return isExists ? 
+            ResponseEntity.notFound().build() : 
+            ResponseEntity.ok().body(data);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<MovieResponseDTO> findById(@PathVariable Long id){
         return service.findById(id)
-        .map(record -> {
-            return ResponseEntity.ok().body(record);
-        }).orElse(ResponseEntity.notFound().build());
+            .map(record ->  ResponseEntity.ok().body(record))
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
 	@Transactional
-    public ResponseEntity<MovieResponseDTO> udpate(@PathVariable Long id, @RequestBody MovieRequestDTO data){
+    public ResponseEntity<MovieResponseDTO> update(@PathVariable Long id, @RequestBody MovieRequestDTO data){
 
         return service.findById(id)
         .map(record -> {
-            var dataSaved = service.save(id, data);
+            var dataSaved = service.update(id, data);
             return ResponseEntity.ok().body(dataSaved);
         }).orElse(ResponseEntity.notFound().build());
     }

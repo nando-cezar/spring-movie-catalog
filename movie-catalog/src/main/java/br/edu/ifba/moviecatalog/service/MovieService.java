@@ -20,21 +20,23 @@ public class MovieService {
         return MovieResponseDTO.toDto(repository.save(entity.toEntity()));
     }
 
-    public MovieResponseDTO save(Long id, MovieRequestDTO entity) {
-        var data = entity.toEntity();
-        data.setId(id);
-        return MovieResponseDTO.toDto(repository.save(data));
-    }
-
-    public List<MovieResponseDTO> find(String name) {
+    public Optional<List<MovieResponseDTO>> find(String name) {
         if(name == null){
-            return  MovieResponseDTO.toListDTO(repository.findAll());
+            var data = MovieResponseDTO.toListDTO(repository.findAll());
+            return Optional.of(data);
         }
-        return MovieResponseDTO.toListDTO(repository.findByNameContains(name));
+        var data = MovieResponseDTO.toListDTO(repository.findByNameContains(name));
+        return Optional.of(data);
     }
 
     public Optional<MovieResponseDTO> findById(Long id) {
         return repository.findById(id).map(MovieResponseDTO::new);
+    }
+
+    public MovieResponseDTO update(Long id, MovieRequestDTO entity) {
+        var data = entity.toEntity();
+        data.setId(id);
+        return MovieResponseDTO.toDto(repository.save(data));
     }
 
     public void deleteById(Long id) {
