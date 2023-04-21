@@ -18,23 +18,81 @@ import org.springframework.web.bind.annotation.RestController;
 import br.edu.ifba.moviecatalog.domain.dto.request.MovieRequestDTO;
 import br.edu.ifba.moviecatalog.domain.dto.response.MovieResponseDTO;
 import br.edu.ifba.moviecatalog.service.MovieService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
 
 @RestController
 @RequestMapping(path = "/movies")
+@Tag(name = "Movies")
 public class MovieController {
     
     @Autowired
     private MovieService service;
 
     @PostMapping
-    public ResponseEntity<MovieResponseDTO> save(@RequestBody MovieRequestDTO data){
+    @Operation(summary = "Save only one movie")
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "201", 
+                description = "Saved with success", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            ),
+            @ApiResponse(
+                responseCode = "406", 
+                description = "Not Acceptable", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            )
+        }
+    )
+    public ResponseEntity<MovieResponseDTO> save(@Parameter(description = "New movie body content to be created") @RequestBody MovieRequestDTO data){
         var dataConverted = service.save(data);
         return new ResponseEntity<MovieResponseDTO>(dataConverted, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<MovieResponseDTO>> find(@RequestParam(required = false) String name){
+    @Operation(summary = "Retrieve all movies with or without filter")
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Retrieval of successful movies", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Not found", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            )
+        }
+    )
+    public ResponseEntity<List<MovieResponseDTO>> find(@Parameter(description = "Title for movie to be found (optional)") @RequestParam(required = false) String name){
         var data = service.find(name).get();
         var isExists = data.isEmpty();
         return isExists ? 
@@ -43,7 +101,32 @@ public class MovieController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MovieResponseDTO> findById(@PathVariable Long id){
+    @Operation(summary = "Retrieve movie by id")
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Retrieval of successful", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Not found", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            )
+        }
+    )
+    public ResponseEntity<MovieResponseDTO> findById(@Parameter(description = "Movie Id to be searched") @PathVariable Long id){
         return service.findById(id)
             .map(record ->  ResponseEntity.ok().body(record))
             .orElse(ResponseEntity.notFound().build());
@@ -51,7 +134,32 @@ public class MovieController {
 
     @PutMapping("/{id}")
 	@Transactional
-    public ResponseEntity<MovieResponseDTO> update(@PathVariable Long id, @RequestBody MovieRequestDTO data){
+    @Operation(summary = "Update only one movie")
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Updated with successful", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Not found", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            )
+        }
+    )
+    public ResponseEntity<MovieResponseDTO> update(@Parameter(description = "Movie Id to be updated") @PathVariable Long id, @Parameter(description = "Movie Elements/Body Content to be updated") @RequestBody MovieRequestDTO data){
 
         return service.findById(id)
         .map(record -> {
@@ -62,7 +170,32 @@ public class MovieController {
 
     @DeleteMapping("/{id}")
 	@Transactional
-    public ResponseEntity<MovieResponseDTO> delete(@PathVariable Long id){
+    @Operation(summary = "Delete only one movie")
+    @ApiResponses(
+        value = {
+            @ApiResponse(
+                responseCode = "200", 
+                description = "Deleted with successful", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Not found", 
+                content = {
+                    @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = MovieResponseDTO.class)
+                    )
+                }    
+            )
+        }
+    )
+    public ResponseEntity<MovieResponseDTO> delete(@Parameter(description = "Movie Id to be deleted") @PathVariable Long id){
 
         return service.findById(id)
         .map(record -> {
