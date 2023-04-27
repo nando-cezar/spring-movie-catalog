@@ -3,6 +3,9 @@ package br.edu.ifba.moviecatalog.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +29,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.transaction.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping(path = "/movies")
@@ -61,9 +65,15 @@ public class MovieController {
             )
         }
     )
-    public ResponseEntity<MovieResponseDTO> save(@Parameter(description = "New movie body content to be created") @RequestBody MovieRequestDTO data){
-        var dataConverted = service.save(data);
-        return new ResponseEntity<MovieResponseDTO>(dataConverted, HttpStatus.CREATED);
+    public ResponseEntity<MovieResponseDTO> save(
+            @Parameter(description = "New movie body content to be created")
+            @RequestBody MovieRequestDTO data,
+            UriComponentsBuilder builder
+    ){
+
+        var dataSaved = service.save(data);
+        var uri = builder.path("/movies/{id}").buildAndExpand(dataSaved.id()).toUri();
+        return ResponseEntity.created(uri).body(dataSaved);
     }
 
     @GetMapping
@@ -92,8 +102,15 @@ public class MovieController {
             )
         }
     )
-    public ResponseEntity<List<MovieResponseDTO>> find(@Parameter(description = "Title for movie to be found (optional)") @RequestParam(required = false) String name){
-        var data = service.find(name).get();
+    public ResponseEntity<List<MovieResponseDTO>> find(
+            @Parameter(description = "Title for movie to be found (optional)")
+            @RequestParam(required = false) String name,
+            @RequestParam(required = true, defaultValue = "0") int page,
+            @RequestParam(required = true, defaultValue = "10") int size
+    ){
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        var data = service.find(name, pageable).get();
         var isExists = data.isEmpty();
         return isExists ? 
             ResponseEntity.notFound().build() : 
@@ -126,14 +143,17 @@ public class MovieController {
             )
         }
     )
-    public ResponseEntity<MovieResponseDTO> findById(@Parameter(description = "Movie Id to be searched") @PathVariable Long id){
+    public ResponseEntity<MovieResponseDTO> findById(
+            @Parameter(description = "Movie Id to be searched")
+            @PathVariable Long id
+    ){
         return service.findById(id)
             .map(record ->  ResponseEntity.ok().body(record))
             .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-	@Transactional
+    @Transactional
     @Operation(summary = "Update only one movie")
     @ApiResponses(
         value = {
@@ -159,7 +179,12 @@ public class MovieController {
             )
         }
     )
-    public ResponseEntity<MovieResponseDTO> update(@Parameter(description = "Movie Id to be updated") @PathVariable Long id, @Parameter(description = "Movie Elements/Body Content to be updated") @RequestBody MovieRequestDTO data){
+    public ResponseEntity<MovieResponseDTO> update(
+            @Parameter(description = "Movie Id to be updated")
+            @PathVariable Long id,
+            @Parameter(description = "Movie Elements/Body Content to be updated")
+            @RequestBody MovieRequestDTO data
+    ){
 
         return service.findById(id)
         .map(record -> {
@@ -169,7 +194,7 @@ public class MovieController {
     }
 
     @DeleteMapping("/{id}")
-	@Transactional
+    @Transactional
     @Operation(summary = "Delete only one movie")
     @ApiResponses(
         value = {
@@ -195,13 +220,15 @@ public class MovieController {
             )
         }
     )
-    public ResponseEntity<MovieResponseDTO> delete(@Parameter(description = "Movie Id to be deleted") @PathVariable Long id){
+    public ResponseEntity<MovieResponseDTO> delete(
+            @Parameter(description = "Movie Id to be deleted")
+            @PathVariable Long id
+    ){
 
         return service.findById(id)
         .map(record -> {
-            var data = record;
             service.deleteById(id);
-            return ResponseEntity.ok().body(data);
+            return ResponseEntity.ok().body(record);
         }).orElse(ResponseEntity.notFound().build());
     }
     

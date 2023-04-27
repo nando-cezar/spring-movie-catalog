@@ -13,7 +13,7 @@ public record MovieResponseDTO(Long id, String name,String synopsis, String phot
     }
 
     public static List<MovieResponseDTO> toListDTO(List<Movie> list){
-        return list.stream().map(MovieResponseDTO::new).collect(Collectors.toList());
+        return list.stream().map(MovieResponseDTO::new).toList();
     }
 
     public static MovieResponseDTO toDto(Movie data) {

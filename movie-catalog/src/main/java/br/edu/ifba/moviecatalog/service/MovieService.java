@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.edu.ifba.moviecatalog.domain.dto.request.MovieRequestDTO;
@@ -17,15 +18,16 @@ public class MovieService {
     private MovieRepository repository;
 
     public MovieResponseDTO save(MovieRequestDTO entity) {
-        return MovieResponseDTO.toDto(repository.save(entity.toEntity()));
+        var dataSaved = repository.save(entity.toEntity());
+        return MovieResponseDTO.toDto(dataSaved);
     }
 
-    public Optional<List<MovieResponseDTO>> find(String name) {
+    public Optional<List<MovieResponseDTO>> find(String name, Pageable pageable) {
         if(name == null){
-            var data = MovieResponseDTO.toListDTO(repository.findAll());
+            var data = MovieResponseDTO.toListDTO(repository.findAll(pageable).toList());
             return Optional.of(data);
         }
-        var data = MovieResponseDTO.toListDTO(repository.findByNameContains(name));
+        var data = MovieResponseDTO.toListDTO(repository.findByNameContains(name, pageable));
         return Optional.of(data);
     }
 
@@ -36,7 +38,8 @@ public class MovieService {
     public MovieResponseDTO update(Long id, MovieRequestDTO entity) {
         var data = entity.toEntity();
         data.setId(id);
-        return MovieResponseDTO.toDto(repository.save(data));
+        var dataUpdated = repository.save(data);
+        return MovieResponseDTO.toDto(dataUpdated);
     }
 
     public void deleteById(Long id) {
